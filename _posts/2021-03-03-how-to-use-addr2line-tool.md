@@ -42,7 +42,7 @@ $ sed '8!d' main.cpp
    std::cout << "Value: " << *p << std::endl;
 ```
 
-The error code is a combination of several error bits defined in [fault.c](http://elixir.bootlin.com/linux/v4.11/source/arch/x86/mm/fault.c#L32):
+The error code is a combination of several error bits defined in [fault.c](https://elixir.bootlin.com/linux/v4.11/source/arch/x86/mm/fault.c#L32):
 ```c
 /*
  * Page fault error code bits:

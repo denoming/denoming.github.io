@@ -711,4 +711,4 @@ $ rm -rf workspace/sources/python3-flask
 
 * [All sort of documentation](https://docs.yoctoproject.org/)
 * [Variables Glossary](https://docs.yoctoproject.org/3.3.1/ref-manual/variables.html)
-* [Index of available layers and recipes](http://layers.openembedded.org/)
+* [Index of available layers and recipes](https://layers.openembedded.org/)

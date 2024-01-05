@@ -85,7 +85,7 @@ $ mkdir -p ~/work/git && cd work/git
 $ git clone git:<host-alias>:gitolite-admin
 ```
 
-Gitolite storage usually contains two folders: `conf` and `keydir`. The `conf` folder contains config file `gitolite.conf` (see [documentation](http://gitolite.com/gitolite/conf.html)). The `keydir` folder contains public keys of users.
+Gitolite storage usually contains two folders: `conf` and `keydir`. The `conf` folder contains config file `gitolite.conf` (see [documentation](https://gitolite.com/gitolite/conf.html)). The `keydir` folder contains public keys of users.
 
 By default `gitolite.conf` look like:
 ```bash
@@ -167,7 +167,7 @@ repo cpp/[a-zA-Z][a-zA-Z0-9_\-\/]*
 	C	= @admins
 	RW+     = @admins
 ```
-To understand deeply follow this [documentation](http://gitolite.com/gitolite/wild.html).
+To understand deeply follow this [documentation](https://gitolite.com/gitolite/wild.html).
 
 # Step 4. Install cgit on the server
 
@@ -383,5 +383,5 @@ $ systemctl restart httpd
 
 ## Links
 
-* [Documentation](http://gitolite.com/gitolite/gitolite.html)
-* [Wildcard](http://gitolite.com/gitolite/wild.html)
+* [Documentation](https://gitolite.com/gitolite/gitolite.html)
+* [Wildcard](https://gitolite.com/gitolite/wild.html)
