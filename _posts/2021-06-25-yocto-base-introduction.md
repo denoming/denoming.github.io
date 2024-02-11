@@ -291,6 +291,20 @@ IMAGE_INSTALL += "helloworld"
 EOF
 ```
 
+### Pass environment variables
+
+Running bitbake and set the list of variables:
+```
+export PROD=1
+export BB_ENV_EXTRAWHITE="$BB_ENV_EXTRAWHITE PROD"
+bitbake ...
+```
+
+Using variables in the recipe:
+```
+DISTRO_FEATURES =. ${@oe.utils.conditional('PROD', '1', '', 'devel ', d)}
+```
+
 ### Enable package management
 
 First you need to enable package managemenet in general as image feature:
