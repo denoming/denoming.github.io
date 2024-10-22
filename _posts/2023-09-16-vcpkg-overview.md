@@ -54,33 +54,57 @@ cmake --build build --parallel
 
 # Porting
 
+## Porting new package
+
+Files layout of a package:
 ```
 vcpkg-registry
     ports
         package
-            portfile.cmake - describes hot to build and install the package
+            portfile.cmake - describes how to build and install the package
             vcpkg.json - describes the package's metadata and dependencies
 versions
-    j-
+    <first-later-of-package-name>-
         package.json
     baseline.json - contains the "latest versions" at a certain commit
 ```
 
-* Update `ports/package.cmake` file if needed
-* Check new version by installing it:
+Steps:
+* Create the manifest file: `vcpkg.json` (describes metadata and dependencies)
+* Format create manifest file using: `vcpkg format-manifest ports/<port>/vcpkg.json`
+* Create the portfile: `portfile.cmake` (describes how to build and install)
 ```
-$ cd <path-to-registry>
-$ vcpkg install package --overlay-ports=ports
+vcpkg_from_github(
+	OUT_SOURCE_PATH SOURCE_PATH
+	REPO <repo>
+	REF <version>
+	SHA512 <hash>
+	HEAD_REF master )
 ```
-* get the git tree ID of the directory:
+* Validate installation of a package:
 ```
-$ git add ports/package
+$ cd <path-to-vcpkg-registry>
+$ vcpkg install <package> --overlay-ports=ports
+```
+* Get the git tree ID of `<package>` directory:
+```
+$ git add ports/<package>
 $ git commit -m "..."
-$ git rev-parse HEAD:ports/package
-57116c5862aeae410fba08fcd54f90d8be714c17
+$ git rev-parse HEAD:ports/<package>
+<hash>
 ```
-* Update `versions/j-/jarvisto.json` file: add new version and certain revision ID
-* Update baseline version at `baseline.json` (put the lastest version)
+* Create `versions/<first-later-of-package-name>-/<package>.json` file:
+```
+ {
+  "versions": [
+    {
+      "version": "0.X.X",
+      "git-tree": "<hash>"
+    }
+  ]
+ }
+```
+* Create baseline version at `baseline.json` (put the latest version)
 * Commit changes by amend commit:
 ```
 $ git add --all

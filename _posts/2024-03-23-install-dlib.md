@@ -31,7 +31,7 @@ $ cmake -Wno-dev \
 -DCMAKE_BUILD_TYPE=Release \
 -DBUILD_SHARED_LIBS=ON \
 -DDLIB_USE_CUDA=ON \
--DCUDA_HOST_COMPILER=/usr/bin/gcc-12
+-DCUDA_HOST_COMPILER=/usr/bin/gcc-13
 $ cmake --build build-release --parallel
 $ cmake --install build-release --prefix $HOME/.local
 ```

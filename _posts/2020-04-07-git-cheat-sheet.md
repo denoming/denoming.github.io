@@ -49,3 +49,18 @@ $ git push origin master # push updates to master (may need --force)
 
 The list of helpful git aliases: [link](https://github.com/karz0n/warehouse/blob/master/cfg/.gitconfig)
 
+# Misc
+
+The list of commonly used commit prefixes:
+```text
+fix:
+feat: 
+build:
+chore:
+ci:
+docs:
+refactor:
+perf:
+test:
+```
+

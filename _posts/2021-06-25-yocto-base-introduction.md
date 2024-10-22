@@ -134,12 +134,14 @@ To run image by QEMU the following packages are required:
 
 ```shell
 $ source sources/poky/oe-init-build-env build
+$ sudo env "PATH=$PATH" runqemu-gen-tapdevs `id -u` `id -g` 4 tmp/sysroots-components/x86_64/qemu-helper-native/usr/bin
 $ runqemu tmp/deploy/images/qemuarm nographic
 or
 $ runqemu qemuarm core-image-minimal kvm
+or
+$ runqemu wic kvm nographic qemuparams="-cpu host -smp 8 -monitor telnet:127.0.0.1:1234,server,nowait -serial telnet:localhost:4321,server,nowait" <path-to-qemuboot.conf-file>
 ...
 ```
-
 # Structure
 
 ## Source directory

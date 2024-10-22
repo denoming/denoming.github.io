@@ -103,13 +103,51 @@ $ sudo udevadm control --reload-rules
 $ sudo systemctl mask brltty.path
 ```
 
-# Check
+# Configure
 
 1. Connect ESP-01 with `USB to ESP-01` adapter,  switch on `UART` mode on adapter;
 2. Plug-in to USB port;
 3. Using any available serial monitor tool (e.g. Arduino IDE or PlatformIO) connect to the board;
+4. Connect:
 ```bash
 $ pio device monitor -p /dev/ttyUSB0 -b 115200 --rtscts
+```
+
+Check status:
+```
 AT
 OK
+```
+
+Check firmware version:
+```
+AT+GMR
+AT version:1.7.5.0(Oct  9 2021 09:26:04)  
+SDK version:3.0.5(b29dcd3)  
+compile time:Oct 15 2021 18:05:30  
+Bin version(Wroom 02):1.7.5
+```
+
+Configure WiFi (STA mode):
+```
+AT+CWMODE=?
++CWMODE:1
+AT+CIFSR
++CIFSR:STAIP,"0.0.0.0"  
++CIFSR:STAMAC,"98:f4:ab:ed:31:b2"
+AT+CWJAP_DEF?  
+No AP
+AT+CWLAP
+... 
++CWLAP:(3,"ZION",-60,"50:ff:20:62:8d:d8",8,6,0,4,4,7,1)
+...
+AT+CWJAP_DEF="ZION","<password>"
+WIFI CONNECTED  
+WIFI GOT IP
+OK
+AT+CWJAP_DEF?
++CWJAP_DEF:"ZION","50:ff:20:62:8d:d8",8,-68,0
+AT+CIFSR
++CIFSR:STAIP,"192.168.1.34"  
++CIFSR:STAMAC,"98:f4:ab:ed:31:b2"
 ```

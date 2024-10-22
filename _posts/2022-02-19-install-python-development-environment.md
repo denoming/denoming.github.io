@@ -69,19 +69,26 @@ $ jupyter lab
 
 # Configuring
 
-## Configure virtual environment
-
-```bash
+Installing `venv` package:
+```shell
 $ python3 -m pip install --user --upgrade pip
 $ python3 -m pip install --user virtualenv
-$ python3 -m pip --version
+```
 
-# Create 
+## Per-project environment
+
+```shell
 $ python3 -m venv .venv
-# Activate
 $ source .venv/bin/activate
-# Install dependencies from requirements file
 $ pip3 install -r requirements.txt
-# Deactivate
+$ deactivate
+```
+
+## Per-user environment
+
+```shell
+$ python3 -m venv ~/.venv
+$ source ~/.venv/bin/activate
+$ pip3 install -r requirements.txt
 $ deactivate
 ```

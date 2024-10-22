@@ -7,7 +7,7 @@ tags: [qemu]
 
 # Install
 
-## Installing on Ubuntu Linux
+## Ubuntu Linux
 
 Install packages:
 ```shell
@@ -37,16 +37,22 @@ $ sudo adduser $USER kvm
 ```
 After adding current user to groups rebooting is required.
 
-## Installing on Arch Linux
+## Arch Linux
 
 Check KVM hardware supporting:
 ```shell
-$ LC_ALL=C lscpu | grep Virtualization
+$ lscpu | grep Virtualization
+...
+Virtualization:                       AMD-V
 ```
 If nothing is displayed after running above command, then your processor does **not** support hardware virtualization.
 
 ```shell
 $ lsmod | grep kvm
+kvm_amd               208896  0  
+kvm                  1355776  1 kvm_amd  
+irqbypass              12288  1 kvm  
+ccp                   163840  1 kvm_amd
 ```
 If the command returns nothing, the module needs to be loaded manually.
 
@@ -64,10 +70,13 @@ After adding current user to groups rebooting is required.
 
 # Use
 
+## Example 1
+
 Example of QEMU command line:
 ```shell
 $ export KERNEL=...
 $ export IMAGE_FILE=...
+
 qemu-system-x86_64 \
 -enable-kvm \
 -kernel $KERNEL \
@@ -85,6 +94,112 @@ qemu-system-x86_64 \
 Specify following environment variables:
 * KERNEL - the path to kernel (e.g. bzImage file)
 * IMAGE_FILE - the path to root filesystem file (e.g. image-qemux86-64.ext4)
+
+## Example 2
+
+Run image file (e.g. `*.wic` file) under QEMU:
+```shell
+$ export KERNEL=bzImage
+$ export WIC=$(find . -type f -name "*.wic")
+$ export PA_SERVER=$(pactl info | grep "Server String" | awk '{print $3}')
+
+$ sudo qemu-system-x86_64 \
+    -cpu host \
+    -smp 8 \
+    -m 16G \
+    -kernel ${KERNEL} \
+    -drive file=${WIC},if=virtio,format=raw \
+    -device virtio-net-pci,netdev=net0,mac=52:54:00:12:34:02 \
+    -netdev tap,id=net0,ifname=tap0,script=no,downscript=no \
+    -usb -device usb-tablet \
+    -usb -device usb-ehci \
+    -device virtio-serial \
+    -device virtio-rng-pci,rng=rng0 \
+    -device virtio-crypto-pci,id=crypto0,cryptodev=cy0 \
+    -device virtio-keyboard-pci \
+    -device virtio-mouse-pci \
+    -device virtio-tablet-pci \
+    -object rng-random,filename=/dev/urandom,id=rng0 \
+    -object cryptodev-backend-builtin,id=cy0 \
+    -vnc :0 \
+    -vga virtio \
+    -enable-kvm \
+    -machine accel=kvm \
+    -device virtio-serial -chardev stdio,id=cons -device virtconsole,chardev=cons \
+    -serial mon:vc \
+    -device intel-hda \
+    -device hda-duplex,audiodev=hda1 \
+    -device qemu-xhci,id=xhci -device usb-host,hostbus=1,hostport=20 \
+    -audiodev pa,id=hda1,server=unix:"${PA_SERVER}",out.frequency=48000 \
+    -monitor telnet:127.0.0.1:1234,server,nowait \
+    -usb \
+    -drive if=none,id=stick,format=<path-to-virtual-flash-drive-image> \
+    -device usb-ehci,id=ehci \
+    -device usb-storage,bus=ehci.0,drive=stick \
+    -append 'root=/dev/vda2 rw ip=192.168.7.2::192.168.7.1:255.255.255.0 oprofile.timer=1 console=hvc0 '
+```
+
+## Example 3
+
+Run RaspberryPi official image under QEMU. 
+
+Install aarch64 QEMU binaries:
+```shell
+$ sudo pamac install qemu-system-aarch64
+```
+
+Download official OS image:
+```shell
+$ mkdir images
+$ export FILE_NAME=2024-07-04-raspios-bookworm-arm64.img
+$ export FILE_PATH=images/$FILE_NAME
+$ wget -O $FILE_PATH.xz https://downloads.raspberrypi.org/raspios_arm64/images/raspios_arm64-2024-07-04/$FILE_NAME.xz
+$ xz -d $FILE_PATH.xz
+```
+
+Mount image as loop device:
+```shell
+$ export TMP=$(mktemp -d)
+$ export LOOP=$(sudo losetup --show -fP "${FILE_PATH}")
+$ echo "Script use folder "$TMP
+$ sudo mount ${LOOP}p2 $TMP
+$ sudo mount ${LOOP}p1 $TMP/boot
+$ sudo bash -c "cat <<'EOF' > $TMP/boot/userconf
+pi:$(echo "password" | openssl passwd -6 -stdin)
+EOF"
+```
+Copy kernel and device tree files (according to Raspberry Pi board version):
+```shell
+cp $TMP/boot/<device-tree-file>.dtb images
+cp $TMP/boot/kernel8.img images
+```
+Destroy loop device:
+```shell
+sudo umount -f $TMP/boot
+sudo umount -f $TMP
+sudo losetup -D
+```
+
+Resize image to bigger size (as a power of 2):
+```shell
+$ qemu-img resize -f raw "$FILE_PATH" 8G
+Image resized.
+```
+
+Run image under QEMU:
+```shell
+$ qemu-system-aarch64 \
+    -enable-kvm \
+    -m 2G \
+    -M raspi4b \
+    -kernel images/2024-07-04-raspios-bookworm-arm64/kernel8.img \
+    -dtb images/2024-07-04-raspios-bookworm-arm64/bcm2711-rpi-4-b.dtb \
+    -drive file="$FILE_PATH",if=sd,format=raw \
+    -append "console=ttyAMA0 root=/dev/mmcblk0p2 rw rootwait rootfstype=ext4" \
+    -device usb-net,netdev=net0 \
+    -netdev user,id=net0,hostfwd=tcp::5555-:22 \
+    -device usb-mouse -device usb-tablet -device usb-kbd
+```
 
 # Configure
 
