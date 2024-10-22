@@ -133,7 +133,3 @@ $ avahi-browse --dump-db
 # List supported DNS-SD service types (abbreviations)
 $ avahi-browse --dump-db -k
 ```
-
-# Links
-
-* [DNS-SD service types](http://www.dns-sd.org/servicetypes.html)
