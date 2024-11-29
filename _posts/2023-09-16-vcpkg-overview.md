@@ -12,13 +12,13 @@ Clone repository to some folder:
 $ cd <path-to-folder>
 $ git clone https://github.com/microsoft/vcpkg
 $ cd vcpkg
-$ ./vcpkg/bootstrap-vcpkg.sh
+$ ./bootstrap-vcpkg.sh -disableMetrics
 ```
 Futher `VCPKG_ROOT` mention will mean the path to cloned vcpkg repository.
 
 Make a symlink to vcpkg tool:
 ```
-$ ln -fs $VCPKG_ROOT/vcpkg $HOME/.local/bin/vcpkg 
+$ ln -fs $VCPKG_ROOT/vcpkg $HOME/.local/bin/vcpkg
 ```
 
 # Using
