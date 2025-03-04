@@ -47,7 +47,14 @@ The `hailofilter` is responsible for post-processing each video stream frames. T
 
 # Installing
 
+Install NVIDIA container toolkit (to access GPU when training models):
+```shell
+$ sudo pamac install -y nvidia-container-toolkit
+$ sudo nvidia-ctk runtime configure --runtime=docker
+$ sudo systemctl restart docker
+$ sudo docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi
 ```
+
 Install `hailo-all` package:
 ```shell
 $ sudo apt update
@@ -69,10 +76,47 @@ Serial Number: HLDDLBB241601754
 Part Number: HM21LB1C2LAE  
 Product Name: HAILO-8L AI ACC M.2 B+M KEY MODULE EXT TMP
 ```
+## Compile from source
+
+Compile HAilo drivers from source:
+```shell
+$ git clone https://github.com/hailo-ai/hailort-drivers.git
+$ cd hailort-drivers
+$ git checkout v4.19.0 -b v4.19.0
+cd linux/pcie
+$ make all
+$ sudo make install
+  INSTALL /lib/modules/6.6.63-1-MANJARO/kernel/drivers/misc/hailo_pci.ko
+  SIGN    /lib/modules/6.6.63-1-MANJARO/kernel/drivers/misc/hailo_pci.ko
+$ sudo modprobe hailo_pci
+$ lsmod | grep hailo
+hailo_pci             151552  0
+$ cd -
+$ bash download_firmware.sh
+$ sudo mkdir -p /lib/firmware/hailo
+...
+2024-12-08 22:42:47 (1.43 MB/s) - ‘hailo8_fw.4.19.0.bin’ saved [166260/166260]
+$ sudo mv hailo8_fw.4.19.0.bin /lib/firmware/hailo/hailo8_fw.bin
+$ sudo cp linux/pcie/51-hailo-udev.rules /etc/udev/rules.d
+$ sudo udevadm control --reload-rules && sudo udevadm trigger
+
+```
+
+Compile HailoRT from source:
+```shell
+$ git clone https://github.com/hailo-ai/hailort.git
+$ cd hailort
+$ git checkout v4.19.0 -b v4.19.0
+$ cmake -Bbuild -Wno-dev \
+-DCMAKE_BUILD_TYPE=Release \
+-DCMAKE_INSTALL_PREFIX=$HOME/temp/hailort
+$ cmake --build build --config release --parallel
+$ cmake --install build
+```
 
 # Using
 
-## rpicam-apps
+## RaspberryPi Camera Applications
 
 Validate the camera is operating:
 ```shell
@@ -99,6 +143,82 @@ $ rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolov
 Poss estimation:
 ```shell
 $ rpicam-hello -t 0 --post-process-file /usr/share/rpi-camera-assets/hailo_yolov8_pose.json --lores-width 640 --lores-height 640
+```
+
+## Hailo Model Zoo
+
+Clone repository:
+```shell
+$ git clone https://github.com/hailo-ai/hailo_model_zoo.git
+```
+
+### Re-training YOLO model 
+
+Build image (only once):
+```shell
+$ cd hailo_model_zoo/training/yolov8
+$ docker build \
+--build-arg timezone=`cat /etc/timezone` \
+--build-arg user=$USER \
+--build-arg group=$USER \
+--build-arg uid=$(id $USER -u) \
+--build-arg gid=$(id $USER -g) \
+--tag hailo-yolov8:v0 .
+```
+
+Run container (from scratch):
+```shell
+docker run \
+-it --gpus all --ipc=host \
+--hostname localhost \
+--user "$(id $USER -u):$(id $USER -u)" \
+--name "hailo-yolov8" \
+-v /home/denys/data/cv/data/:/data \
+hailo-yolov8:v0
+% yolo detect train data=/data/Barcode-Detection/data.yaml model=yolov8s.pt name=retrain_yolov8s epochs=20 batch=8
+```
+
+Run container (resume training):
+```shell
+$ docker ps -a
+CONTAINER ID   IMAGE             COMMAND       CREATED          STATUS          PORTS     NAMES
+ee6a90ee77fc   hailo-yolov8:v0   "/bin/bash"   56 minutes ago   Up 28 seconds             hailo-yolov8
+$ docker container start ee6a90ee77fc
+$ docker attach ee6a90ee77fc
+% yolo train resume model=runs/detect/retrain_yolov8s/weights/last.pt
+```
+
+Export trained model to ONNX format:
+```shell
+% yolo export model=runs/detect/retrain_yolov8s/weights/best.pt imgsz=640 format=onnx opset=11
+% cp runs/detect/retrain_yolov8s/weights/best.onnx /data/barcode-detection.onnx
+```
+
+Compile ONNX model into Hailo model format (HEF file):
+```shell
+$ cd hailo/AI-Software-Suite
+$ bash hailo_ai_sw_suite_docker_run.sh --override
+$ hailomz compile yolov8s \
+--ckpt=/local/shared_with_docker/data/barcode-detection.onnx \
+--hw-arch=hailo8l \
+--calib-path=/local/shared_with_docker/data/Barcode-Detection/test/images \
+--classes=2 \
+--performance
+...
+<Hailo Model Zoo INFO> HEF file written to yolov8s.hef
+$ cp /local/workspace/yolov8s.hef /local/shared_with_docker
+```
+After obtaining model in HEF format it can be used in inference pipeline. 
+
+
+## AI Software Suite
+
+```shell
+$ unzip hailo_ai_sw_suite_2024-10_docker.zip
+# Change following at 'hailo_ai_sw_suite_docker_run.sh' file:
+readonly NVIDIA_DOCKER_EXIST=$(dpkg -l | grep 'nvidia-docker\|nvidia-container-toolkit')
+To
+readonly NVIDIA_DOCKER_EXIST=$(pacman -Q | grep 'nvidia-docker\|nvidia-container-toolkit')
 ```
 
 ## Using TAPPAS framework (Hailo-RPI5)
@@ -292,3 +412,4 @@ $ gst-launch-1.0 \
 * [Hailo Model Zoo](https://github.com/hailo-ai/hailo_model_zoo/tree/master/hailo_model_zoo)
 * [TAPPAS Post-Processing Libraries](https://github.com/hailo-ai/tappas/tree/master/core/hailo/libs/postprocesses)
 * [Camera software](https://www.raspberrypi.com/documentation/computers/camera_software.html)
+* [HailoRT Documentation](https://hailo.ai/developer-zone/documentation/hailort-v4-19-0/)

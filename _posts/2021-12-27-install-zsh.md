@@ -43,15 +43,15 @@ $ source ~/.zshrc
 ```bash
 $ cd ~/Downloads
 $ wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.0.0/Hack.zip
-$ mkdir ~/.fonts && cd ~/.fonts
+$ mkdir ~/.fonts
+$ unzip Hack.zip -d ~/.fonts
 # update fonts in terminal
 ```
-
 ## Install Powerlevel9k
 
 ```bash
 $ git clone https://github.com/bhilburn/powerlevel9k.git ~/.oh-my-zsh/custom/themes/powerlevel9k
-$ vim ~/.zshrc file
+$ vim ~/.zshrc
 ...
 ZSH_THEME="powerlevel9k/powerlevel9k"
 

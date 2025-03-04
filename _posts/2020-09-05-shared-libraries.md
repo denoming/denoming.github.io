@@ -81,7 +81,9 @@ $ /lib64/ld-linux-x86-64.so.2 --list <file> # (depends on used linker)
 List symbols in file:
 
 ```bash
-$ nm -CnD <file>
+$ nm -CnD <file>.so
+or
+$ objdump -TC <file>.so
 ```
 
 Get the SONAME (the name with interface version) of library:

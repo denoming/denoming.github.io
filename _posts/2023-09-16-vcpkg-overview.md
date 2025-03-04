@@ -4,7 +4,6 @@ date: 2023-09-16
 categories: [Engineering,Linux]
 tags: [vcpkg,tools,package-manager]
 ---
-
 # Installing
 
 Clone repository to some folder:

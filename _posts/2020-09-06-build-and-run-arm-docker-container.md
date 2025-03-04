@@ -38,7 +38,7 @@ mask ffffffffffffff00fffffffffffffffffeffffff
 Run docker:
 ```shell
 # Run 
-docker run --rm --platform linux/arm64 -t arm64v8/debian:bookworm uname -m
+$ docker run --rm --platform linux/arm64 -t arm64v8/debian:bookworm uname -m
 aarch64
 ```
 

@@ -6,7 +6,18 @@ Enable debug logs:
 LIBCAMERA_LOG_FILE=<path-to-log-file> LIBCAMERA_LOG_LEVELS=V4L2Compat:DEBUG ...
 ```
 
+## Install
+
+```shell
+$ sudo apt install rpicam-apps libcamera-v4l2 libcamera-tools
+```
+
 ## Using
+
+Basic testing:
+```shell
+$ LIBCAMERA_LOG_LEVELS=*:DEBUG cam -l
+```
 
 List available cameras:
 ```shell
@@ -24,7 +35,10 @@ SRGGB10_CSI2P S     RGGB          10            CSI2P                 ...
 
 Load an application with libcamera V4L2 compatibility layer preload:
 ```shell
-$ libcamerify  v4l2-ctl --list-devices
+# List devices
+$ libcamerify v4l2-ctl --list-devices
+# List formats
+$ libcamerify v4l2-ctl --list-formats
 ```
 
 Getting simple JPEG images:
@@ -71,6 +85,19 @@ Breaks output video into segment size (given in millis):
 $ libcamera-vid -n -t 3000 --codec mjpeg --segment 100 -o test%05d.jpeg
 ```
 
+Streaming video to a window (V4L2 compatibility layer):
+```shell
+# Get video stream (planar 4:2:0 YUV)
+$ libcamerify gst-launch-1.0 v4l2src device=/dev/video0 ! "video/x-raw,format=(string)I420,width=(int)800,height=(int)600" ! videoconvert ! xvimagesink sync=false
+# Get video stream (reverse RGB packed into 24 bits without padding)
+$ libcamerify gst-launch-1.0 v4l2src device=/dev/video0 ! "video/x-raw,format=(string)BGR,width=(int)800,height=(int)600" ! videoconvert ! xvimagesink sync=false
+```
+
+Streaming video to a window (using libcamera plugin):
+```shell
+$ gst-launch-1.0 libcamerasrc ! videoconvert ! 'video/x-raw,format=I420,width=1280,height=720' ! queue ! autovideosink sync=false
+```
+
 Streaming video (UDP+libcamera):
 ```shell
 # on server side (RPi3)
@@ -91,6 +118,23 @@ or
 $ libcamera-vid -t 0 --width 1280 --height 720 -n --inline -o - | gst-launch-1.0 fdsrc fd=0 ! h264parse ! rtph264pay ! udpsink host=<ip-address> port=5000
 # Cliend side
 $ gst-launch-1.0 udpsrc port=5000 caps=application/x-rtp ! rtph264depay ! h264parse ! avdec_h264 ! autovideosink
+```
+
+Streaming video (TCP+gstreamer):
+```shell
+# Sender
+$ gst-launch-1.0 libcamerasrc ! \
+     video/x-raw,colorimetry=bt709,format=NV12,width=1280,height=720,framerate=30/1 ! \
+     queue ! jpegenc ! multipartmux ! \
+     tcpserversink host=0.0.0.0 port=5000
+# Sender (multi stream)
+$ gst-launch-1.0 libcamerasrc name=cs src::stream-role=view-finder src_0::stream-role=video-recording \
+    cs.src ! queue ! video/x-raw,width=640,height=480 ! videoconvert ! autovideosink \
+    cs.src_0 ! queue ! video/x-raw,width=800,height=600 ! videoconvert ! \
+    jpegenc ! multipartmux ! tcpserversink host=0.0.0.0 port=5000
+# Receiver
+$ gst-launch-1.0 tcpclientsrc host=$DEVICE_IP port=5000 ! \
+     multipartdemux ! jpegdec ! autovideosink
 ```
 
 Streaming video (TCP+libcamera):

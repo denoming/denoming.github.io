@@ -4,7 +4,6 @@ date: 2022-10-15
 categories: [Engineering,Linux]
 tags: [qemu]
 ---
-
 # Install
 
 ## Ubuntu Linux
