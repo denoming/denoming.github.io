@@ -421,6 +421,8 @@ graphical.target reached after 2min 33.315s in userspace.
 Displays which systemd units take the most time to initialize:
 ```shell
 $ systemd-analyze blame
+# or to get specific service blame
+$ systemd-analyze blame | grep "some.service"
 ```
 
 Displays the time-critical chain of events:
@@ -429,6 +431,8 @@ $ systemd-analyze critical-chain
 ...
 # @<value>: the absolute number of seconds since startup
 # +<value>: the amount of time it takes for the unit to start
+# or to analyze service critical chain
+$ systemd-analyze critical-chain some.service
 ```
 
 Displays the system state:
@@ -600,6 +604,33 @@ TimeoutIdleSec=30
 
 [Install]
 WantedBy=remote-fs.target
+```
+
+## Backup service
+
+File: `/etc/systemd/system/SERVICE-bkp.service`:
+```text
+[Unit]
+Description=SERVICE backup
+After=local-fs.target
+
+[Service]
+ExecStartPre=/usr/bin/systemctl stop SERVICE
+ExecStart=/bin/bash -c 'tar -czf /opt/bkp/SERVICE_$$(date +%%Y-%%m-%%d_%%H-%%M-%%S).tar.gz /opt/SERVICE/'
+ExecStartPost=/usr/bin/systemctl start SERVICE
+Type=oneshot
+```
+
+File: `/etc/systemd/system/SERVICE-bkp.timer`:
+```text
+[Unit]
+Description=SERVICE backup
+
+[Timer]
+OnCalendar=*-*-* 05:00:00
+
+[Install]
+WantedBy=timers.target
 ```
 
 # Links

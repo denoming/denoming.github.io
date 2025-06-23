@@ -38,6 +38,15 @@ allow_anonymous false
 password_file /etc/mosquitto/.passwd
 ```
 
+Check sending a message to remote server:
+```
+$ sudo apt install mosquitto-clients
+# Subscribe
+$ mosquitto_sub -h <server> -t test -u <user> -P <pass>
+# Publish
+$ mosquitto_pub -h <server> -u <user> -P <pass> -t test -m "Hello"
+```
+
 Apply configuration file:
 ```shell
 $ sudo systemctl restart mosquitto

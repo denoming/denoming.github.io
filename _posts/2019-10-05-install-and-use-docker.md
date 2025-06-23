@@ -38,6 +38,8 @@ In case of any problems please follow official [instruction](https://docs.docker
 
 ## Credentials
 
+### Pass
+
 Create GPG key to use for encrypting a password storage:
 ```shell
 $ gpg --generate-key
@@ -52,7 +54,6 @@ $ pass init "<username>"
 
 Configure docker credentials (choose the last available release [here](https://github.com/docker/docker-credential-helpers/releases)):
 ```shell
-$ export FILE=docker-credential-pass-v0.8.2.linux-amd64
 $ wget -P $HOME/.local/bin https://github.com/docker/docker-credential-helpers/releases/download/v0.8.2/docker-credential-pass-v0.8.2.linux-amd64
 $ cp docker-credential-pass-v0.8.2.linux-amd64 $HOME/.local/bin/docker-credential-pass
 $ chmod +x $HOME/.local/bin/docker-credential-pass
@@ -61,6 +62,7 @@ $ tee ~/.docker/config.json > /dev/null <<EOF
   "credsStore": "pass",
   "auths": {}
 }
+EOF
 ```
 
 Login to docker:
@@ -68,6 +70,42 @@ Login to docker:
 $ docker login -u <username>
 ```
 
+### Secret service
+
+```shell
+$ mkdir -p $HOME/.local/bin 
+$ wget -O $HOME/.local/bin/docker-credential-secretservice https://github.com/docker/docker-credential-helpers/releases/download/v0.9.3/docker-credential-secretservice-v0.9.3.linux-amd64
+$ chmod +x $HOME/.local/bin/docker-credential-secretservice
+$ vim ~/.docker/config.json
+{
+  "credsStore": "secretservice",
+  "auths": {}
+}
+$ docker login -u <username>
+```
+
+
+## Multi-architecture build
+
+Configure containerd image store:
+```shell
+$ sudo vim /etc/docker/daemon.json
+{
+  "features": {
+    "containerd-snapshotter": true
+  }
+}
+$ sudo systemctl restart docker
+$ docker info -f '{{ .DriverStatus }}'
+[[driver-type io.containerd.snapshotter.v1]]
+```
+Configure custom builder:
+```shell 
+$ docker buildx create \
+  --name bender \
+  --driver docker-container \
+  --bootstrap --use
+```
 # Commands
 
 Build container:

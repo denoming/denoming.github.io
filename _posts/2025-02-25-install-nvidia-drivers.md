@@ -25,7 +25,7 @@ $ chmod +x ~/Downloads/NVIDIA-Linux-x86_64-550.144.03.run
 
 Remove NVIDIA drivers
 ```shell
-$ sudo dpkg -l "*nvidia*"" |grep ii |awk '{print $2}'
+$ sudo dpkg -l "*nvidia*" |grep ii |awk '{print $2}'
 $ sudo apt remove $(dpkg -l "*nvidia*"" |grep ii |awk '{print $2}')
 $ sudo apt reinstall xserver-xorg-video-nouveau
 $ reboot

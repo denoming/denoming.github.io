@@ -12,14 +12,18 @@ tags:
 ---
 Before installing user level emulation:
 ```shell
-$ docker run --rm --platform linux/arm64 -t arm64v8/ubuntu uname -m
+$ docker run --rm --platform linux/arm64 -t arm64v8/debian:bookworm uname -m
 exec format error
 ```
 
 Installing:
 ```shell
+# ArchLinux
 $ sudo pamac install --no-confirm \
 qemu-user-static qemu-user-static-binfmt
+# Ubuntu
+$ sudo apt install -y \
+qemu-user-static
 ```
 
 File `/usr/bin/qemu-aarch64-static` as well as `F` flag must be present:

@@ -6,8 +6,10 @@ categories:
 tags: []
 ---
 
-| Name                        | Author       | Status |
-| --------------------------- | ------------ | ------ |
-| Concurrency with Modern C++ | Rainer Grimm | (done) |
-| C++20 Get the Details       | Rainer Grimm | (done) |
-| The C++ Standard Library    | Rainer Grimm | (done) |
+| Name                                  | Author        | Status |
+| ------------------------------------- | ------------- | ------ |
+| Concurrency with Modern C++           | Rainer Grimm  | (done) |
+| C++20 Get the Details                 | Rainer Grimm  | (done) |
+| The C++ Standard Library              | Rainer Grimm  | (done) |
+| Introduction to statistics            | Jim Frost, MS | (done) |
+| Professional CMake: A Practical Guide | Craig Scott   | (done) |
