@@ -49,7 +49,14 @@ The `hailofilter` is responsible for post-processing each video stream frames. T
 
 Install NVIDIA container toolkit (to access GPU when training models):
 ```shell
+# ArchLinux
 $ sudo pamac install -y nvidia-container-toolkit
+# Ubuntu
+$ sudo apt install nvidia-container-toolkit
+```
+
+Configure:
+```shell
 $ sudo nvidia-ctk runtime configure --runtime=docker
 $ sudo systemctl restart docker
 $ sudo docker run --rm --runtime=nvidia --gpus all ubuntu nvidia-smi
@@ -82,7 +89,7 @@ Compile HAilo drivers from source:
 ```shell
 $ git clone https://github.com/hailo-ai/hailort-drivers.git
 $ cd hailort-drivers
-$ git checkout v4.19.0 -b v4.19.0
+$ git checkout v4.21.0 -b v4.21.0
 cd linux/pcie
 $ make all
 $ sudo make install
@@ -95,18 +102,17 @@ $ cd -
 $ bash download_firmware.sh
 $ sudo mkdir -p /lib/firmware/hailo
 ...
-2024-12-08 22:42:47 (1.43 MB/s) - ‘hailo8_fw.4.19.0.bin’ saved [166260/166260]
-$ sudo mv hailo8_fw.4.19.0.bin /lib/firmware/hailo/hailo8_fw.bin
+2025-07-08 10:19:30 (584 KB/s) - ‘hailo8_fw.4.21.0.bin’ saved [164512/164512]
+$ sudo mv hailo8_fw.4.21.0.bin /lib/firmware/hailo/hailo8_fw.bin
 $ sudo cp linux/pcie/51-hailo-udev.rules /etc/udev/rules.d
 $ sudo udevadm control --reload-rules && sudo udevadm trigger
-
 ```
 
 Compile HailoRT from source:
 ```shell
 $ git clone https://github.com/hailo-ai/hailort.git
 $ cd hailort
-$ git checkout v4.19.0 -b v4.19.0
+$ git checkout v4.21.0 -b v4.21.0
 $ cmake -Bbuild -Wno-dev \
 -DCMAKE_BUILD_TYPE=Release \
 -DCMAKE_INSTALL_PREFIX=$HOME/temp/hailort

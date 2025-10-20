@@ -4,7 +4,6 @@ date: 2019-10-05
 categories: [Development,Configure]
 tags: [gcc,cmake,clang,ubuntu]
 ---
-
 # Install build essential
 
 ```bash
@@ -19,14 +18,14 @@ $ sudo apt install -y build-essential
 Install the desired GCC/G++ (e.g. the latest one):
 
 ```bash
-$ sudo apt install gcc-12 g++-12
+$ sudo apt install --install-suggests gcc-13 g++-13 gcc-14 g++-14
 ```
 
 Update alternatives for convenient switching:
 
 ```bash
-$ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 11 --slave /usr/bin/g++ g++ /usr/bin/g++-11 --slave /usr/bin/gcov gcov /usr/bin/gcov-11
-$ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 12 --slave /usr/bin/g++ g++ /usr/bin/g++-12 --slave /usr/bin/gcov gcov /usr/bin/gcov-12
+$ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 13 --slave /usr/bin/g++ g++ /usr/bin/g++-13 --slave /usr/bin/gcov gcov /usr/bin/gcov-13
+$ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 14 --slave /usr/bin/g++ g++ /usr/bin/g++-14 --slave /usr/bin/gcov gcov /usr/bin/gcov-14
 ```
 
 Configure alternatives (by default the highest priority alternative used):

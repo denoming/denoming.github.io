@@ -1,3 +1,9 @@
+---
+title: "Install Python environment"
+date: 2022-02-19
+categories: [My]
+tags: [python]
+---
 
 # Configuring
 

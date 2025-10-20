@@ -41,5 +41,5 @@ Total num pixels (bytes) = width * height * 3 / 2
 In case of `YUV422` (e.g. `YUYV`) interleaved data, it looks as below:
 `Y1U1Y2V1 Y3U2Y4V2 ... ...`
 
-
+https://wiki.videolan.org/YUV/
 

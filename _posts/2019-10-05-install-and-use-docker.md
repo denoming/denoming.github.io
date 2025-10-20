@@ -76,6 +76,7 @@ $ docker login -u <username>
 $ mkdir -p $HOME/.local/bin 
 $ wget -O $HOME/.local/bin/docker-credential-secretservice https://github.com/docker/docker-credential-helpers/releases/download/v0.9.3/docker-credential-secretservice-v0.9.3.linux-amd64
 $ chmod +x $HOME/.local/bin/docker-credential-secretservice
+$ mkdir -p ~/.docker
 $ vim ~/.docker/config.json
 {
   "credsStore": "secretservice",
@@ -99,6 +100,7 @@ $ sudo systemctl restart docker
 $ docker info -f '{{ .DriverStatus }}'
 [[driver-type io.containerd.snapshotter.v1]]
 ```
+
 Configure custom builder:
 ```shell 
 $ docker buildx create \
@@ -106,6 +108,7 @@ $ docker buildx create \
   --driver docker-container \
   --bootstrap --use
 ```
+
 # Commands
 
 Build container:
