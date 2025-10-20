@@ -1,5 +1,5 @@
 ---
-title: Setup TensorFlow environment
+title: TensorFlow - Getting Started
 date: 2025-03-13
 categories:
   - MachineLearning
@@ -8,6 +8,13 @@ tags:
   - tensorflow
 ---
 # Setup
+
+```shell
+$ pip install --upgrade pip
+$ pip install tensorflow
+or
+$ pip install tensorflow[and-cuda]
+```
 
 ## Using Conda
 
@@ -40,11 +47,16 @@ $ pip install "tensorflow-cpu"
 Use TF+Jupyter docker image:
 ```shell
 $ docker pull tensorflow/tensorflow:latest-jupyter
-$ docker run -it -p 8888:8888 -v $PWD:/tf/my tensorflow/tensorflow:latest-jupyter
+$ docker run -it -p 8888:8888 -v $PWD:/tf/my tensorflow/tensorflow:latest
 ```
 
-Use TF+Jupyter docker image with GPU support:
+Use TF+Jupyter docker image with GPU support (docker 19.03 or above + nvidia-container-toolkit are required):
 ```shell
+# Check if a GPU is available
+$ lspci | grep -i nvidia
 $ docker pull tensorflow/tensorflow:latest-gpu-jupyter
-$ docker run -it -p 8888:8888 -v $PWD:/tf/my tensorflow/tensorflow:latest-gpu-jupyter
+$ docker run -it -p 8888:8888 \
+-v $PWD:/tf/my \
+--runtime=nvidia --gpus all \
+tensorflow/tensorflow:latest-gpu-jupyter
 ```
