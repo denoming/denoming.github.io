@@ -1,4 +1,4 @@
----
+	---
 title: "Install zsh"
 date: 2021-12-27
 categories: [Engineering,Linux]
@@ -47,17 +47,30 @@ $ mkdir ~/.fonts
 $ unzip Hack.zip -d ~/.fonts
 # update fonts in terminal
 ```
-## Install Powerlevel9k
 
-```bash
-$ git clone https://github.com/bhilburn/powerlevel9k.git ~/.oh-my-zsh/custom/themes/powerlevel9k
+# Install fonts
+
+```shell
+$ mkdir -p ~/.local/share/fonts/{CascadiaCode,CascadiaMono}
+$ unzip ~/Downloads/CascadiaCode.zip -d ~/.local/share/fonts/CascadiaCode
+$ unzip ~/Downloads/CascadiaMono.zip -d ~/.local/share/fonts/CascadiaMono
+$ fc-cache -f -v
+```
+
+# Install shell emulators
+
+## Install kitty emulator
+
+Install kitty and modify theme:
+```shell
+$ sudo apt install kitty
+$ kitten themes
+```
+
+Install shell prompt:
+```shell
+$ curl -sS https://starship.rs/install.sh | sh
 $ vim ~/.zshrc
-...
-ZSH_THEME="powerlevel9k/powerlevel9k"
-
-POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(root_indicator ssh dir dir_writable vcs)
-POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status background_jobs)
-POWERLEVEL9K_MODE="nerdfont-complete"
-POWERLEVEL9K_COLOR_SCHEME='light'
-...
+eval "$(starship init zsh)"
+$ starship preset gruvbox-rainbow -o ~/.config/starship.toml
 ```

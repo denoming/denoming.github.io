@@ -12,80 +12,58 @@ $ lspci |grep -E "VGA|3D"
 01:00.0 VGA compatible controller: NVIDIA Corporation GA102 [GeForce RTX 3080 Lite Hash Rate] (rev a1)
 ```
 
-Check if UEFI Secure Boot Dsiabled
+Check if UEFI Secure Boot Disabled:
 ```shell
 $ mokutil --sb-state
 SecureBoot disabled
 ```
 
-Download NVIDIA driver: https://www.nvidia.com/en-us/drivers/
+# Debian
+
+## Install NVIDIA driver (Debian way)
+
+See [Debian 13 "Trixie"](https://wiki.debian.org/NvidiaGraphicsDrivers#Debian_13_.22Trixie.22).
+
+## Install NVIDIA CUDA driver + toolkit (origin)
+
+Enroll public keys and configure NVIDIA repository:
 ```shell
-$ chmod +x ~/Downloads/NVIDIA-Linux-x86_64-550.144.03.run
+$ wget https://developer.download.nvidia.com/compute/cuda/repos/debian13/x86_64/cuda-keyring_1.1-1_all.deb
+$ sudo dpkg -i cuda-keyring_1.1-1_all.deb
+$ sudo apt-get update
 ```
 
-Remove NVIDIA drivers
+Install proprietary kernel module (preferably to run in recovery mode):
 ```shell
-$ sudo dpkg -l "*nvidia*" |grep ii |awk '{print $2}'
-$ sudo apt remove $(dpkg -l "*nvidia*"" |grep ii |awk '{print $2}')
-$ sudo apt reinstall xserver-xorg-video-nouveau
-$ reboot
+sudo apt-get install -y cuda-drivers
 ```
 
+Enable DRM in GRUB configuration mode:
 ```shell
-$ pkcon update
-$ pkcon install linux-headers-$(uname -r) gcc gcc-12 g++-12 make acpid dkms pkg-config libglvnd-core-dev libglvnd0 libglvnd-dev libc-dev xwayland libxcb1
+$ sudo echo 'GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX nvidia-drm.modeset=1 nvidia-drm.fbdev=1"' > /etc/default/grub.d/nvidia-modeset.cfg
+$ sudo update-grub
 ```
 
+Force loading the driver on early stages:
 ```shell
-$ update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 90 --slave /usr/bin/g++ g++ /usr/bin/g++-12
-$ update-alternatives --config gcc
+sudo vim /etc/initramfs-tools/modules
+...
+nvidia
+nvidia_modeset
+nvidia_uvm
+nvidia_drm
 ```
 
+Enable NVIDIA module parameter:
 ```shell
-$ wget https://mirrors.edge.kernel.org/ubuntu/pool/main/e/egl-wayland/libnvidia-egl-wayland1_1.1.17-1_amd64.deb
-$ sudo dpkg -i libnvidia-egl-wayland1_1.1.17-1_amd64.deb
+$ sudo echo 'options nvidia NVreg_PreserveVideoMemoryAllocations=1' > /etc/modprobe.d/nvidia-power-management.conf
+```
+Reboot:
+```shell
+$ sudo systemctl restart
 ```
 
+After restarting install CUDA toolkit:
 ```shell
-$ sudo -i
-$ echo "blacklist nouveau" >> /etc/modprobe.d/blacklist.conf
-$ echo "options nvidia_drm modeset=1" >> /etc/modprobe.d/nvidia.conf
-$ echo "options nvidia_drm fbdev=1" >> /etc/modprobe.d/nvidia.conf
-```
-
-```shell
-$ update-grub2
-$ update-initramfs -c -k $(uname -r)
-```
-
-```shell
-$ systemctl set-default multi-user.target
-$ reboot
-```
-
-```shell
-sudo -i
-~/Downloads/NVIDIA-Linux-*.run
-```
-
-> Select NVIDIA Propriatary
-> Select Continue Installation
-> Yes
-> Yes
-> Rebuild initramfs
-> Yes
-
-```shell
-systemctl set-default graphical.target
-reboot
-```
-
-```shell
-$ pkcon install vdpauinfo libva2 vainfo
-$ sudo systemctl enable nvidia-suspend.service
-$ sudo systemctl enable nvidia-hibernate.service
-$ sudo systemctl enable nvidia-resume.service
-
-$ nvidia-installer -v | grep version
-nvidia-installer:  version 550.144.03
+$ sudo apt-get -y install cuda-toolkit-13-1
 ```
