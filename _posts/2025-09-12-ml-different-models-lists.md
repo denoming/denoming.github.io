@@ -8,8 +8,13 @@ tags:
 ---
 # Models
 
+## Object Detection
+
 | Version            | License       | Key Points                                                                                                                                                                                                                                             |
 | ------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| R-CNN              | BSD           | |
+| Faster R-CNN       | MIT           | |
+| SSD                | MIT           | |
 | YOLOv1 & YOLOv2    | Not specified | It was developed by Joseph Redmon, but the code was not formally licensed for reuse.<br>Avoid these for modern projects due to outdated architecture and unclear licensing.                                                                            |
 | YOLOv3             | GPL-3.0       | **Copyleft**: Derivatives must also be open-source under GPL-3.0.<br>Avoid commercial projects unless you’re willing to open-source your code.<br>[GitHub](https://github.com/pjreddie/darknet)                                                        |
 | YOLOv4             | MIT License   | Permissive: Use freely in closed-source/commercial projects.<br>Credit the original authors and retain the license file.<br>[GitHub](https://github.com/AlexeyAB/darknet)                                                                              |
@@ -44,3 +49,12 @@ tags:
 * DAMO-YOLO: PyTorch
 * RF-DETR
 * RetinaNet
+
+## Segmentation
+
+* **Semantic segmentation** (one segment for object of the same type, e.g. all person(s) in an image are treated as one segment)
+	* [Fully CNN](https://arxiv.org/abs/1411.4038)
+	* [U-Net](https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/)
+	* [DeepLab](http://liangchiehchen.com/projects/DeepLab.html)
+* Instance Segmentation (multiple "instances" of same class are separate segments)
+	*[ Mask R-CNN](https://arxiv.org/abs/1703.06870)
