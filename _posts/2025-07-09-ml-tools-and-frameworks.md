@@ -1,11 +1,23 @@
 ---
-title: Machine Learning - Tools
+title: Machine Learning - Tools & Frameworks
 date: 2025-07-09
 categories:
   - My
 tags:
   - ml
 ---
+
+# Frameworks
+
+* PyTorch
+	* [Lightning](https://lightning.ai/docs/pytorch/stable/)
+* TensorFlow
+
+## Experiment Tracking 
+
+* [Weights and Biases](https://wandb.ai/site/experiment-tracking/)
+* [MLFLow](https://mlflow.org/classical-ml/experiment-tracking)
+
 # Annotations
 
 ## Remote
@@ -41,7 +53,8 @@ export LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=<absolute-path-to-datasets-dir>
 label-studio --data-dir $HOME/data/cv/tools/label-studio
 ```
 Note: Local storage is a dir with a bunch of datasets available for importing into `Label Studio`. Currently YOLO and COCO datasets are supporting.
-### Import COCO/YOLO dataset
+
+#### Import COCO/YOLO dataset
 
 Link: [Importing Local YOLO Pre-Annotated Images](https://labelstud.io/blog/tutorial-importing-local-yolo-pre-annotated-images-to-label-studio/)
 
@@ -66,10 +79,12 @@ Note: `--image-root-url` specify the root URL which contains relative path where
 * Paste the content of `label-studio.label_config.xml` file and click `Save`
 * Click `Import` and select `label-studio.json` file
 
-## CVAT
+
+### CVAT
 
 Link: [CVAT](https://github.com/cvat-ai/cvat)
-## CVAT
+
+### VGG Image Annotator (VIA)
 
 Link: [VGG](https://www.robots.ox.ac.uk/~vgg/software/via/)
 
