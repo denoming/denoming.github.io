@@ -20,6 +20,12 @@ Stages:
 3. Assemble;
 4. Link.
 
+Display information about compiler (GCC) configuration:
+```
+$ gcc -Q -v --help=target
+```
+
+Run compilation with enabled verbosity:
 ```bash
 $ g++ -O2 main.cpp -o main --verbose
 # Run compiler (preprocess + compile)

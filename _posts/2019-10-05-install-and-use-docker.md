@@ -74,7 +74,7 @@ $ docker login -u <username>
 
 ```shell
 $ mkdir -p $HOME/.local/bin 
-$ wget -O $HOME/.local/bin/docker-credential-secretservice https://github.com/docker/docker-credential-helpers/releases/download/v0.9.3/docker-credential-secretservice-v0.9.3.linux-amd64
+$ wget -O $HOME/.local/bin/docker-credential-secretservice https://github.com/docker/docker-credential-helpers/releases/download/v0.9.6/docker-credential-secretservice-v0.9.6.linux-amd64
 $ chmod +x $HOME/.local/bin/docker-credential-secretservice
 $ mkdir -p ~/.docker
 $ vim ~/.docker/config.json
