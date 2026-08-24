@@ -13,7 +13,7 @@ $ git clone https://github.com/microsoft/vcpkg
 $ cd vcpkg
 $ ./bootstrap-vcpkg.sh -disableMetrics
 ```
-Futher `VCPKG_ROOT` mention will mean the path to cloned vcpkg repository.
+Further `VCPKG_ROOT` mention will mean the path to cloned vcpkg repository.
 
 Make a symlink to vcpkg tool:
 ```

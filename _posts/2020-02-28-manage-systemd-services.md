@@ -69,7 +69,7 @@ $ systemctl isolate multi-user.target
 ```
 
 Change `default.target` from `graphical.target` to `multi-user.target`:
-```
+```shell
 # Get default target
 $ systemctl get-default
 multi-user.target
@@ -92,6 +92,7 @@ Locations:
 	* `/etc/systemd/system` 
 	* `/etc/systemd/user` 
 
+
 | Unit         | Description                                                                                                                                                                                                                                                                                                             |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `.automount` | The `.automount` units are used to implement on-demand (i.e., plug and play) and mounting of filesystem units in parallel during startup.                                                                                                                                                                               |
@@ -104,6 +105,8 @@ Locations:
 | `.swap`      | The `.swap` units define swap devices or files.                                                                                                                                                                                                                                                                         |
 | `.target`    | The `.target` units define groups of unit files that define startup synchronization points, runlevels, and services. Target units define the services and other units that must be active in order to start successfully.                                                                                               |
 | `.timer`     | The `.timer` unit defines timers that can initiate program execution at specified times.                                                                                                                                                                                                                                |
+
+
 To view all available unit files:
 ~~~ bash
 $  systemctl --all -t service
@@ -169,6 +172,7 @@ systemd recognizes the following time units:
 | OnUnitActiveSec=   | Yes       | This defines a timer relative to when the timer that is to be<br>activated was last activated.                                                                                                                                                                                                                                                                                          |
 | OnUnitInactiveSec= | Yes       | This defines a timer relative to when the timer that is to be<br>activated was last deactivated.                                                                                                                                                                                                                                                                                        |
 | OnCalendar=        | No        | This defines real-time (i.e., wall clock) timers with calendar<br>event expressions. See systemd.time(7) for more information on the syntax of calendar event expressions. Otherwise, the semantics are similar to OnActiveSec= and related settings. This timer is the one most like those used with the cron service.                                                                 |
+
 The list of calendar timer specification examples:
 
 | Calendar event<br>specification | OnCalendarDescription                                                                                                                             |
@@ -211,6 +215,7 @@ Validating and examining timestamps:
 ```shell
 $  systemd-analyze timestamp "Jun 17 10:08:41"
 ```
+
 # View logs
 
 Configuration file: `/etc/systemd/journald.conf`.
@@ -247,6 +252,7 @@ Most common options:
 | `--flush`                                           | Journal data stored in the virtual filesystem `/run/log/journal`,<br>which is volatile storage, is written to `/var/log/journal` which is persistent storage. This option ensures that all data is flushed<br>to `/run/log/journal` at the time it returns. |
 | `--sync`                                            | This writes all unwritten journal entries (still in RAM but not in<br>`/run/log/journal`) to the persistent filesystem. All journal entries known to the journaling system at the time the command is entered are moved to persistent storage.              |
 | `--vacuum-size= --<br>vacuum-time= --vacuum-files=` | These can be used singly or in combination to remove the oldest archived journal files until the specified condition is met. These options only consider archived files, and not active files, so the result might not be exactly what was specified.       |
+
 Displays boot and startup logs generated by the system during normal operation:
 ```
 $ journalctl

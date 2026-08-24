@@ -35,12 +35,18 @@ $ sudo apt-get update
 
 Install proprietary kernel module (preferably to run in recovery mode):
 ```shell
-sudo apt-get install -y cuda-drivers
+$ sudo apt update
+$ sudo apt install linux-headers-$(uname -r) dkms
+$ sudo apt install -y cuda-drivers
+
 ```
 
-Enable DRM in GRUB configuration mode:
+Edit /etc/default/grub file:
+* Remove **splash** in the _GRUB_CMDLINE_LINUX_DEFAULT_
+* Add **nvidia-drm.modeset=1 nvidia-drm.fbdev=1** to the _GRUB_CMDLINE_LINUX_DEFAULT_
+
+Update grub:
 ```shell
-$ sudo echo 'GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX nvidia-drm.modeset=1 nvidia-drm.fbdev=1"' > /etc/default/grub.d/nvidia-modeset.cfg
 $ sudo update-grub
 ```
 
@@ -54,16 +60,41 @@ nvidia_uvm
 nvidia_drm
 ```
 
+Update:
+```
+$ sudo update-initramfs -u
+```
+
 Enable NVIDIA module parameter:
 ```shell
 $ sudo echo 'options nvidia NVreg_PreserveVideoMemoryAllocations=1' > /etc/modprobe.d/nvidia-power-management.conf
 ```
-Reboot:
-```shell
-$ sudo systemctl restart
-```
 
-After restarting install CUDA toolkit:
+Enable NVIDIA systemd power management hooks:
+```
+$ sudo systemctl enable nvidia-suspend
+$ sudo systemctl enable nvidia-hibernate
+$ sudo systemctl enable nvidia-resume
+```
+Reboot and check that `nvidia-smi` see the driver.
+
+After reboot install CUDA toolkit:
 ```shell
 $ sudo apt-get -y install cuda-toolkit-13-1
 ```
+
+### Configure sddm to use wayland or X11
+
+Set `DisplayServer` to `x11` or `wayland`:
+```
+$ sudo vim /etc/sddm.conf
+[General]
+DisplayServer=wayland
+
+[Wayland]
+CompositorCommand=kwin_wayland
+
+[X11]
+EnableHiDPI=true
+```
+

@@ -97,8 +97,14 @@ $ sudo vim /etc/docker/daemon.json
   }
 }
 $ sudo systemctl restart docker
-$ docker info -f '{{ .DriverStatus }}'
-[[driver-type io.containerd.snapshotter.v1]]
+```
+
+Install QEMU and register the executable types on the host:
+```shell
+$ docker run --privileged --rm tonistiigi/binfmt --install all
+$ ls /proc/sys/fs/binfmt_misc
+python3.13    qemu-arm          qemu-mips64    qemu-ppc64le  qemu-s390x  status
+qemu-aarch64  qemu-loongarch64  qemu-mips64el  qemu-riscv64  register
 ```
 
 Configure custom builder:
@@ -106,9 +112,22 @@ Configure custom builder:
 $ docker buildx create \
   --name bender \
   --driver docker-container \
-  --bootstrap --use
+  --bootstrap \
+  --use
+$ docker buildx inspect --bootstrap
 ```
 
+Check building multi-arch image (without pushing to remote OCI registry):
+```shell
+$ docker buildx build --platform linux/amd64,linux/arm64 -t test-multiarch:latest --load - <<EOF
+FROM alpine
+RUN echo "Testing local multi-arch store"
+EOF
+$ docker run --rm --platform linux/amd64 test-multiarch:latest uname -m
+x86_64
+$ docker run --rm --platform linux/arm64 test-multiarch:latest uname -m
+aarch64
+```
 # Commands
 
 Build container:
