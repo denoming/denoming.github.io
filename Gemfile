@@ -2,6 +2,8 @@
 
 source "https://rubygems.org"
 
+gem "base64"
+gem "bigdecimal"
 gem "json", "2.7.1"
 gem "jekyll-theme-chirpy", "~> 6.5", ">= 6.5.5"
 
