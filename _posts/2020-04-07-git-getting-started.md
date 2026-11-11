@@ -14,15 +14,8 @@ $ sudo apt install git git-lfs git-gui
 ```
 # Configure
 
-Generate SSH key:
-```
-$ ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
-> ...
-$ eval "$(ssh-agent -s)"
-> Agent pid ....
-$ ssh-add ~/.ssh/id_rsa
-...
-```
+The example of config to use: [link](https://github.com/denoming/warehouse/blob/d207458ccef2d136ac23fb2c1648695fe21a8a2a/cfg/.gitconfig)
+
 Configure username/email (global):
 ```bash
 $ git config --global user.name "FirstName LastName"
@@ -36,7 +29,45 @@ $ git config user.email "name@example.com"
 $ git commit --amend --reset-author --no-edit # to reset author for previous commit
 ```
 
-The example of config to use: [link](https://github.com/denoming/warehouse/blob/d207458ccef2d136ac23fb2c1648695fe21a8a2a/cfg/.gitconfig)
+### SSH
+
+Generate SSH key:
+```
+$ ssh-keygen -t ed25519 -C "your_email@example.com" -f $HOME/.ssh/key
+or
+$ ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+> ...
+$ eval "$(ssh-agent -s)"
+> Agent pid ....
+$ ssh-add ~/.ssh/id_rsa
+...
+```
+
+## Token
+
+Configure saving credentials in the internal storage:
+```shell
+git config --global credential.helper store
+git pull origin main
+# Enter Username
+# Enter Token
+```
+
+
+Using credential manager:
+```
+$ git config --global credential.https://something.com.username oauth2
+or in .gitconfig
+[credential "https://something.com"]
+    username = oauth2
+```
+
+Embedded token to config:
+```
+[url "https://oauth2:<token>@something.com/"]
+    insteadOf = https://something.com/
+```
+
 # Update
 
 Update fork:

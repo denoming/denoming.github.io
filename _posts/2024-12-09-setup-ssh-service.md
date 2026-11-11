@@ -49,9 +49,58 @@ UsePAM no
 $ systemctl restart sshd
 ```
 
-### Scenario 2: Configure SSH Jumping
+### Scenario 2: Configure reverse SSH
 
-Connect to host destination throught the chain of one or more jump hosts.
+Given:
+* **IP1** - "white" IP address 
+* **Port** - SSH server port
+
+Enable gateway ports on server (jump host):
+```
+$ sudo tee > /dev/null /etc/ssh/sshd_config.d/enable-gateway-ports.conf <<EOF
+GatewayPorts yes
+EOF
+$ sudo systemctl restart ssh
+```
+
+Set up key-based authentication on the client (on client):
+```
+$ ssh-keygen -t ed25519 -f ~/.ssh/tunnel
+$ ssh-copy-id -i ~/.ssh/tunnel.pub -p <Port> <user>@<IP1>
+```
+
+Check connection:
+```
+$ sudo apt install autossh -y
+$ autossh -M 0 -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" -N -R 2222:localhost:22 -p <Port> <user>@<IP1> -i ~/.ssh/tunnel
+# On jump host we shall observer opened port 2222
+```
+
+Set systemd configuration:
+```
+$ sudo tee > /dev/null /etc/systemd/system/reverse-tunnel.service <<EOF
+[Unit]
+Description=AutoSSH Reverse Tunnel to Public Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=root
+Environment="AUTOSSH_GATETIME=0"
+ExecStart=/usr/bin/autossh -M 0 -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" -N -R 2222:localhost:22 -i ~/.ssh/tunnel -p <Port> <user>@<IP1>
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+$ sudo systemctl daemon-reload
+$ sudo systemctl enable --now reverse-tunnel.service
+```
+
+### Scenario 3: Configure SSH jumping
+
+Connect to host destination through the chain of one or more jump hosts.
 
 ```shell
 $ ssh -p <custom-port> -i <key> -J <jump-host-1>,<jump-host-2>,... <user>@<ip-address>
@@ -59,7 +108,7 @@ $ ssh -p <custom-port> -i <key> -J <jump-host-1>,<jump-host-2>,... <user>@<ip-ad
 
 Note: Use ~/.ssh/config to specify configuration for jump hosts
 
-### Scenario 3: Local TCP Forwarding
+### Scenario 4: Local TCP forwarding
 
 ```shell
 $ ssh -N -L <local-port>:<remote-server>:<remote-port> <ssh-server>
@@ -73,15 +122,29 @@ $ vim /etc/ssh/sshd_config
 AllowTcpForwarding yes
 ```
 
-### Scenario 4: Local TCP Forwarding
+### Scenario 5: Local TCP forwarding
 
 ```shell
 $ sudo apt install -y pv
 $ yes | pv | ssh <remote-host> "cat > /dev/null" 
 ```
 
-### Scenario 5: Local TCP Forwarding
+### Scenario 6: Local TCP forwarding
 
 ```shell
 $ ssh -f -C2qTnN -D <listenting-port> <user>@<ssh-server>
+```
+
+### Scenario 7: Disable host key checking
+
+During connecting:
+```
+$ ssh -o StrictHostKeyChecking=no <address>
+```
+
+In config file `~/.ssh/config`:
+```
+Host 192.168.1.*
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
 ```

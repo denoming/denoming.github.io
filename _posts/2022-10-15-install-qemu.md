@@ -36,37 +36,6 @@ $ sudo adduser $USER kvm
 ```
 After adding current user to groups rebooting is required.
 
-## Arch Linux
-
-Check KVM hardware supporting:
-```shell
-$ lscpu | grep Virtualization
-...
-Virtualization:                       AMD-V
-```
-If nothing is displayed after running above command, then your processor does **not** support hardware virtualization.
-
-```shell
-$ lsmod | grep kvm
-kvm_amd               208896  0  
-kvm                  1355776  1 kvm_amd  
-irqbypass              12288  1 kvm  
-ccp                   163840  1 kvm_amd
-```
-If the command returns nothing, the module needs to be loaded manually.
-
-```shell
-$ sudo pamac install qemu-full libvirt
-```
-
-Add current user to the proper groups:
-```shell
-$ sudo groupmems -g libvirt -a $USER
-$ sudo groupmems -g kvm -a $USER
-# Reboot
-```
-After adding current user to groups rebooting is required.
-
 # Use
 
 ## Example 1
@@ -449,6 +418,51 @@ $ sudo virsh net-list --all
  Name          State    Autostart   Persistent
 ------------------------------------------------
  host-bridge   active   yes         yes
+```
+
+
+### Switch between kvm and vbox
+
+`/usr/local/bin/hypervisor-switch`:
+```
+$ tee > /dev/null /usr/local/bin/hypervisor-switch <<EOF
+#!/bin/bash
+
+# Detect CPU vendor for correct KVM module
+if grep -q "AuthenticAMD" /proc/cpuinfo; then
+    KVM_MOD="kvm_amd"
+else
+    KVM_MOD="kvm_intel"
+fi
+
+case "$1" in
+    vbox)
+        echo "Switching to VirtualBox mode..."
+        sudo systemctl stop libvirtd.socket libvirtd.service
+        sudo modprobe -r "$KVM_MOD" kvm
+        echo "Success! VirtualBox is now ready to use."
+        ;;
+    kvm)
+        echo "Switching to KVM mode..."
+        sudo modprobe kvm
+        sudo modprobe "$KVM_MOD"
+        sudo systemctl start libvirtd
+        echo "Success! KVM and libvirtd are now ready to use."
+        ;;
+    *)
+        echo "Usage: sudo hypervisor-switch {vbox|kvm}"
+        exit 1
+        ;;
+esac
+EOF
+$ sudo chmod +x /usr/local/bin/hypervisor-switch
+```
+
+Using:
+```
+$ hypervisor-switch vbox
+or
+$ hypervisor-switch kvm
 ```
 
 # Links

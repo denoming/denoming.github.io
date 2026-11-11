@@ -36,7 +36,7 @@ $ sudo apt-get update
 Install proprietary kernel module (preferably to run in recovery mode):
 ```shell
 $ sudo apt update
-$ sudo apt install linux-headers-$(uname -r) dkms
+$ sudo apt install linux-image-amd64 linux-headers-amd64 dkms nvidia-kernel-dkms
 $ sudo apt install -y cuda-drivers
 
 ```

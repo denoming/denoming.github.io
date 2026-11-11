@@ -496,7 +496,7 @@ Where $\dot x(t)$ is a column vector holding all the rates of change, $x(t) = [x
 * How can we represent different ODEs in a state space form?
 	* Newton's equations of motion: Force = Mass x Acceleration: $F(t) = m \ddot x(t)$
 	* How does the position $x(t)$ evolve with time for a given force $F(t)$?
-	* The problem is a second order of the Newton's equation (because we have acceleration in the formula).
+	* The problem is the second order of the Newton's equation (we have acceleration in the formula).
 	
 
 To represents Newton's equation $F(t) = m \ddot x(t)$ as state equation $\dot x(t) = f(t,x(t),u(t))$:
@@ -684,6 +684,8 @@ Transformation of uncertainty:
 Solution uncertainty:
 * $P=ARA^T = (H^TR^{-1}H)^{-1}$ (get uncertainty in $y$ and transform it to the uncertainty of $x$)
 
+The matrix $P$ is an error covariance matrix. The error represents the difference between the true value and an estimated value ($\tilde x = x - \hat x$). Therefore, the matrix contains co-variances (off-diagonal values) and variances (diagonal values) for all components of the state vector.
+
 ### Recursive Least Squares
 
 Previous methods requires all the measurements to be available at time that we calculate the solution. What happens if we don't?
@@ -732,4 +734,320 @@ Recursive least squares:
 ### Least Squares Estimation Summary
 
 ![df]({{site.utl}}/assets/img/posts/DF39.png)
+
+## Linear Kalman
+
+What is the Kalman filter?
+* Recursive estimator that solves the "linear-quadratic-estimation" problem
+* $\hat x=E(x\mid z_1,z_2,...,z_k)$, where $z_1, z_2,...,z_k$ are noisy measurements, $x$ is a true state (unknown) and $\hat x$ is an estimated state
+* $\hat x = min J$
+* State estimation error: $\tilde x=x - \hat x$
+* State estimation error covariance matrix: $P = [(x - \hat x)(x - \hat x)^T]$
+* $J = [(x - \hat x)(x - \hat x)^T] = Tr(P)$ (minimizing estimation covariance, minimizes the cost function)
+
+Main applications are:
+* guidance, navigation and control of vehicle (cars, ships, aircraft)
+* Robotics and manufacturing
+* Any time-domain series analysis
+
+### Types of filter
+
+* Linear Kalman Filter (KF)
+* Extended Kalman Filter (EKF)
+* Unscented Kalman Filter (UKF)
+
+Linear Kalman Filter:
+* Assumes  linear discrete or continuous system dynamics
+* Uses linear covariance prediction/update equations
+* Does not work with non-linear systems
+
+Extended Kalman Filter:
+* Assumes non-linear discrete or continuous system dynamics
+* Uses a linear covariance prediction/update equation, **but** the linear relationship is approximated from the non-linear dynamics
+* Works well with non-linear systems that are **smooth** and the estimated state is **close to the true state**
+
+Unscented Kalman Filter
+* Assumes non-linear discrete or continuous system dynamics
+* Uses the non-linear system to calculate the prediction/update equation, making it a better approximation than the EKF (instead of linearizing the system dynamic, it calculates approximation of the uncertainty covariances)
+* Works on on-linear systems that are slightly more non-linear that what the EKF can handle, since it is better at approximating the non-linear systems.
+
+
+### How it works?
+
+![df]({{site.utl}}/assets/img/posts/DF40.png)
+
+* "a priori" means **before**
+* "a posteriori" means **after**
+* The "+" and "-" superscripts are a compact shorthand for "before" and "after"
+* $\hat x_k^-$ means the systems's best guess of the state $k$, calculated by applying the **kinematic equations** to the previous step. This is our prediction based on previous state estimate.
+* $\hat x_k^+$ is the **refined** state estimate $k$ once the sensor reading has corrected the prediction
+* The filter tracks two things for every state: the **mean** (the best guess of the state) and the **covariance** (how uncertain that guess is)
+
+
+Discrete time system model:
+* **Process (System) model:** $\boxed{x_k=F_{k-1}x_{k-1} + G_{k-1}u_{k-1}+L_{k-1}w_{k-1}}$ (master formula which describes how the system evolves with time from step $k-1$ to step $k$)
+	* $x_k$ - target system state we want to calculate
+	* $F_{k-1}x_{k-1}$ (transition part) - handle the natural continuation of current state if we do nothing and let physics take the "wheel".
+		* **Intuition:** This answers the question: _"If I do nothing and just let physics take the wheel, where will my previous state ($\mathbf{x}_{k-1}$) carry me over time step $\Delta t$?"_ It handles the natural continuation of your current position and velocity.
+	* $G_{k-1}u_{k-1}$ (control part) - "What did we actively tell the system to do?"
+		* **Intuition:** This answers: _"What did we_ actively tell the system to do?" For example, if you are tracking a vehicle and you know the driver slammed on the brakes, this term injects that known deceleration into the prediction. _(Note: If your tracked object is uncooperative or autonomous and you have no access to its controls—like tracking a wild bird or another drone—this entire term is dropped or set to zero)._
+	* $L_{k-1}w_{k-1}$ (noise part) - noise which influence
+		* **Intuition:** Real life never follows pure math. A gust of wind hits the drone, a tire slips on gravel, or a gear vibrates. $F$ and $G$ assume a _perfect_ world; $L\mathbf{w}$ represents **everything the math missed**. It forces the filter to admit: _"My physics model is good, but it's not omniscient, so I'll add a little buffer of uncertainty."_
+* **Measurement model:** $\boxed{z_k=H_kx_k + M_kv_k}$
+* $x_k \sim$ state vector
+* $u_k \sim$ control input vector
+* $w_k \sim$ process model noise vector
+* $v_k \sim$ measurement noise vector
+* $F_k \sim$ state transition matrix (describes how the state changes with the input of the state)
+* $G_k \sim$ control input matrix (describes how the state changes based on control input)
+* $H_k \sim$ measurement matrix describes the linear combination that the measurement is based on the current state)
+* $L_k \sim$ process model noise sensitivity matrix
+* $M_k \sim$ measurement model noise sensitivity matrix
+
+Assumption about the noise ($w_k$ and $v_k$):
+* $w_k \sim N(0, Q_k)$
+* $v_k \sim N(0, R_k)$
+* $w_k$ and $v_k$ have Gaussian distribution with zero mean and given covariance matrix
+* $E(w_kw_j^T) = Q_k \delta_{k-j}$ (not correlated with time)
+* $E(v_kv_j^T) = R_k \delta_{k-j}$ (not correlated with time)
+* $E(w_kv_j^T) = 0$ (process noise and measurement noise are independent)
+
+**The goal is to estimate the state of the system based on our knowledge of the dynamic and the availability of noise measurements**
+
+* $\hat x^+_0 = E(x_0)$ where $\hat x_0$ is initial state
+* $\hat x^-_k = E(x_k \mid z_1, z_2,...,z_{k-1})$ where $\hat x^-_k$ is a priori estimated state
+	* **Intuition:** _"Based on where it was, how fast it was going, and how it was accelerating, my physics equations say it should be right here right now."_ It is a prediction _before_ checking the radar or camera.
+* $\hat x^+_k = E(x_k \mid z_1, z_2, ..., z_k)$ where $\hat x^+_k$ is a posterior estimated state, $x_k$ is a true state, $z_1,z_2,...,z_k$ are noisy measurements.
+	* **Intuition:** _"My physics prediction said it was at point A, but the camera says it's at point B. The Kalman filter compromised and placed it at point C."_ That compromise value is the **a posteriori mean**.
+
+**The Kalman filter also uses the covariance of the estimation error to probabillistically find the updated state estimate**
+
+* $P^-_k = E[(x_k - \hat x^-_k) (x_k - \hat x^-_k)^T]$ where $P^-_k$ is a priori estimated covariance
+	* **Intuition:** Because time has passed and objects can wobble, speed up unexpectedly, or drift, **uncertainty grows during the prediction step**. The a priori covariance is usually larger than the previous step's covariance because you are driving blindfolded by physics until the next measurement arrives.
+* $P^+_k = E[(x_k - \hat x^+_k) (x_k - \hat x^+_k)^T]$ where $P^+_k$ a posteriori estimated covariance
+	* **Intuition:** Getting a fresh measurement gives you new information, which **reduces your uncertainty**. Therefore, the a posteriori covariance is almost always smaller (more confident) than the a priori covariance because the sensor helped pin down where the object actually is.
+* $\tilde x=x_k - \hat x_k$
+
+### 2D Tracking Filter
+
+Goal: To estimate the position and velocity of a moving object based on **remote** measurements.
+
+Many applications:
+* Object tracking in images
+* Military surveillance
+* Robotics
+* GPS navigation and guidance
+
+Problem:
+* Assume an object travels at a constant speed in the 2D X-Y plane {Process Model}
+* Assume we get position measurements of the objects location (i.e. Radar) {Sensor Model} 
+
+
+![df]({{site.utl}}/assets/img/posts/DF41.png)
+
+### 2D Tracking System Model
+
+In a 2D Cartesian coordinate system, an object's position at any time $t$ is defined by a 2D vector: $p(t) = \begin{bmatrix}x(t) \\ y(y)\end{bmatrix}$. As the object moves, its coordinates change over time. The derivatives describe the rates of this changes: $v = \frac {dp} {dt} = \begin{bmatrix}v_x \\ v_y\end{bmatrix}$ (velocity) and $a = \frac {dv} {dt} = \begin{bmatrix}a_x \\ a_y\end{bmatrix}$ (acceleration).
+
+Derive the system process model from the equations of motion (kinematic equations): $\boxed{a = \frac {dv} {dy} = \frac {d^2p} {dt^2}}$
+
+Assuming **constant** acceleration, the relations are found using truncated (as acceleration is constant) Taylor series in discrete time steps term:
+* $p = p_0 + t v_0 + \frac 1 2 a t ^2$
+* $v = v_0 + a t$
+* $p_0$ and $v_0$ are initial position and velocity
+
+In a tracking filter, we rarely deal with continuous time directly; instead, we work in discrete time steps $k$ (i.e. frame-to-frame intervals $\triangle t$). Taylor series expansion is a bridge between continuous physics (kinematic equations) and discrete steps applicable to Kalman filter. The Taylor series expansion says "if we know an object's position and all its derivatives (velocity, acceleration, ...), we can mathematically predict its position at a future time $t + \triangle t$". As we assume that acceleration is constant our Taylor series expansion is truncated. Therefore, any derivatives higher than acceleration are zero or negligible over tiny time step $\triangle t$.
+
+
+![df]({{site.utl}}/assets/img/posts/DF42.png)
+
+Taylor series for position: $p(t + \Delta t) = p(t) + \frac{dp}{dt}\Delta t + \frac{1}{2}\frac{d^2p}{dt^2}\Delta t^2 + \frac{1}{6}\frac{d^3p}{dt^3}\Delta t^3 + \dots$
+
+* Equation in matrix form:
+$$\begin{bmatrix} p \\ v \end{bmatrix} = \begin{bmatrix} 1 & t \\ 0 & 1 \end{bmatrix} \begin{bmatrix} p_0 \\ v_0 \end{bmatrix} + \begin{bmatrix} \frac 1 2 t^2 \\ t \end{bmatrix} a$$
+
+* Convert to discrete time: $t = \triangle t$;
+$$\begin{bmatrix} p \\ v \end{bmatrix}_k = \begin{bmatrix} 1 & \triangle t \\ 0 & 1 \end{bmatrix} \begin{bmatrix} p \\ v \end{bmatrix}_{k-1} + \begin{bmatrix} \frac 1 2 \triangle t^2 \\ \triangle t \end{bmatrix} [a]$$
+
+* State vector: 
+$$x_k = \begin{bmatrix} p_x \\ p_y \\ v_x \\ v_y \end{bmatrix}$$
+* Input vector:
+$$u_k = \begin{bmatrix} a_x \\ a_y \end{bmatrix}$$
+* Discrete process model: $x_k = Fx_{k_1} + Gu_{k-1}$
+
+$$\begin{bmatrix} p_x \\ p_y \\ v_x \\ v_y \end{bmatrix}_k = \underbrace{\begin{bmatrix} 1 & 0 & \triangle t & 0 \\ 0 & 1 & 0 & \triangle t \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \end{bmatrix}}_F \begin{bmatrix} p_x \\ p_y \\ v_x \\ v_y \end{bmatrix}_{k-1} + \underbrace{\begin{bmatrix} \frac 1 2 \triangle t^2 & 0 \\ 0 & \frac 1 2 \triangle t^2 \\ \triangle t & 0 \\ 0 & \triangle t \end{bmatrix}}_G \begin{bmatrix} a_x \\ a_y \end{bmatrix}_{k-1}$$
+
+Because we don't have a sensor on board to track acceleration, we don't have input vector. Instead of having a known deterministic input, we assume that the input is a noise vector:
+
+* $w_k = \begin{bmatrix} a_x \\ a_y \end{bmatrix}$
+* $a_x \sim N(0,\sigma^2_{a_x})$
+* $a_y \sim N(0,\sigma^2_{a_y})$
+* $\sigma^2_{a_x}$ and $\sigma^2_{a_y}$ are tuning parameters (they tell how much the acceleration is going to vary in X and Y directions)
+* Discrete process model (after we drop the input and assume the only input into the system is going to be from the noise value): $\boxed{x_k = Fx_{k-1} + Lw_{k-1}}$
+* $L$ matrix is the same as $G$ matrix
+* $a_x$ and $a_y$ are random variables following normal distribution
+
+### Prediction Step
+
+* We being the estimation step with the initial condition $\hat x_0^+$ which is the best estimate of the initial state of the system.
+* We want to propagate time forward to find $\hat x_1^- = E(x_1)$,so we can use the sate space model of the system: $\hat x_1^- = F_0\hat x_0^+ + G_0 u_0$
+
+#### Prediction Step (State)
+
+* This is the prediction step or time update step. We use the discrete process model of the system we  want to estimate to predict the estimated state (mean of the Gaussian of the PDF) forward in time.
+
+$$\boxed{\hat x_k^- = F_{k-1}\hat x_{k-1}^+ + G_{k-1} u_{k-1}}$$
+
+#### Prediction Step (Covariance)
+
+* But we also want to propagate the covariance forward in time as well. To begin with $P_0^+$ is the initial covariance for the state estimate of $x_0$
+	* Exact knowledge of $x_0$ then $P_0^+ = 0$ (there is no uncertainty)
+	* No knowledge of $x_0$ then $P_0^+ \rightarrow \infty$ (there is large uncertainty)
+* But we usually know an approximate value (or good assumption) for the value of $x_0$ so we set $P_0^+$ to be:
+
+$$\boxed{P_0^+ = E[(x_0 - \hat x_0^+)(x_0 - \hat x_0^+)^T]}$$
+
+* So given $P_0^+$ we can propagate this uncertainty with time using the linear transformation:
+
+$$\boxed{P_1^- = F_0P_0^+ F_0^T}$$
+
+* But this does not change the amount of the uncertainty in the system, it just shifts it between the states as the system dynamics dictate. The magnitude of $P$ before and after stays the constant. 
+* We need to account for the new uncertainty in the state due to the process model noise: $L_{k-1}w_{k-1}$  (part in the discrete process model).
+* To account for new uncertainty in the system due to process model noise we add a new covariance term:
+
+$$\boxed{P_1^- = F_0P_0^+ F_0^T + L_0Q_0L_0^T}$$
+* It is usually assumed that the process noise is additive, so that $L_k = I$, which means that the equation can be simplified to:
+
+$$\boxed{P_1^- = F_0P_0^+ F_0^T + Q_0}$$
+
+**Predicted (a priori) state estimate:** $\boxed{\hat x_k^- = F_{k-1}\hat x_{k-1}^+ + G_{k-1} u_{k-1}}$ (shifts the mean of the Gaussian probability distribution of the estimated state)
+**Predicted (a priori) covariance estimate:** $\boxed{P_k^- = F_{k-1}P_{k-1}^+ F_{k-1}^T + Q_{k-1}}$ (shifts the covariance of the Gaussian probability distribution of the estimated state)
+
+#### 2D Tracking System Model
+
+* Process Model: $x_k = Fx_{k-1} + Lw_{k-1}$, $w_k \sim N(0,Q)$
+* Process Noise Model: $P_k^- = FP_{k-1}^+ F^T + LQL^T$, $Q = \begin{bmatrix}\sigma^2_{a_x} & 0 \\ 0 & \sigma^2_{a_x}\end{bmatrix}$
+
+$$\begin{bmatrix} p_x \\ p_y \\ v_x \\ v_y \end{bmatrix}_k = \underbrace{\begin{bmatrix} 1 & 0 & \triangle t & 0 \\ 0 & 1 & 0 & \triangle t \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \end{bmatrix}}_F \begin{bmatrix} p_x \\ p_y \\ v_x \\ v_y \end{bmatrix}_{k-1} + \underbrace{\begin{bmatrix} \frac 1 2 \triangle t^2 & 0 \\ 0 & \frac 1 2 \triangle t^2 \\ \triangle t & 0 \\ 0 & \triangle t \end{bmatrix}}_L \begin{bmatrix} a_x \\ a_y \end{bmatrix}_{k-1}$$
+
+Looking at $LQL^T$ and expend it out we will obtain not valid Gaussian probability distribution and it is not valid PDF because it is ranked deficient (determinant is zero). Instead of threading acceleration value for $x$ and $y$ separately,we are just going to assume that it's just a constant variance.
+
+Assumptions:
+* $\sigma_a = \sigma_{a_x} = \sigma_{a_y}$ (change from 2D Gaussian distribution to 1D)
+* $w^k \sim L \cdot N(0,\sigma^2_a)$ (use $L$ matrix as a scaling to the normal distribution in order to make additive noise)
+* This gives us covariance $\hat Q$ with valid probability distribution:
+
+$$\hat Q = \sigma^2_a \begin{bmatrix} \frac 1 2 \triangle t^2 & 0 & 0 & 0 \\ 0 & \frac 1 2 \triangle t^2 & 0 & 0 \\ 0 & 0 & \triangle t & 0 \\ 0 & 0 & 0 & \triangle t \end{bmatrix}$$
+
+Now, process noise model become: $\boxed{P_k^- = FP_{k-1}^+ F^T + \hat Q}$ and process model: $\boxed{x_k = Fx_{k-1} + w_{k-1}}$ (with additive noise).
+
+### Update Step
+
+#### Update Step (State)
+
+* Measurement Model: $z_k = H_kx_k + M_kv_k$
+* $H_k$ is a measurement model matrix
+* $M_k$ is a measurement model noise sensitivity matrix
+
+* We now need to derive how to update the state **prediction** $\hat x_k^-$ (without the current information from the measurement) with the current measurement $z_k$ to form the **updated** state estimate $\hat x_k^+$ (with the current information from the measurement).
+* This will be done as a weighted estimate based on the **error** between the **measurement** $z_k$ and the **predicted measurement** calculated from $H_k\hat x_k^-$.
+* This **error** is called **innovation** and denoted as $\tilde y_k$
+
+* Innovation: $\boxed{\tilde y_k = z_k - H_k\hat x_k^-}$
+* Innovation Covariance: $S_k = H_kP_k^-H_k^T + R_k$
+* $z_k\sim$ measurement vector
+* $\hat z_k\sim$ predicted measurement vector
+* $\tilde y_k \sim$ measurement innovation (error) vector 
+* $S_k \sim$ innovation covariance matrix
+
+
+* The state is updated based the size of the innovation $\hat y_k$, using the **Kalman Gain** matrix $K_k$, which itself is formed as a ration between the innovation uncertainty and the current state uncertainty.
+
+* State Update: $\boxed{\hat x_k^+ = \hat x_k^- + K_k\tilde y_k}$
+* Kalman Gain: $\boxed{K_k = P_k^-H_k^TS_k^{-1}}$
+
+#### Update Step (Covariance)
+
+* The whole point of the update process is to reduce the uncertainty in the estimates and improve the accuracy, so the covariance of the estimate must change
+
+* Covariance Update: $\boxed{P_k^+ = (I - K_kH_k)P_K^-}$ ($P_k^+$ must be smaller than $P_k^-$)
+
+#### 2D Tracking Measurement Model
+
+* Measurement Model: $z_k = Hx_k + v_k$
+* $v_k \sim N(0, R)$
+* $R = \begin{bmatrix}\sigma^2_x & 0 \\ 0 & \sigma^2_y\end{bmatrix}$
+* $\sigma_\text{meas} = \sigma_x = \sigma_y$
+
+
+$$\begin{bmatrix}p_x \\ p_y\end{bmatrix}_k = \underbrace{\begin{bmatrix}1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0\end{bmatrix}}_H \begin{bmatrix}p_x \\ p_y \\ v_x \\ v_y\end{bmatrix}_k$$
+
+
+### Best Practice
+
+Filter state prediction model check:
+* **{Zero-Noise Consistency Check}** Run the simulation without any noise from a **known initial condition** and run the Kalman filter prediction from the **same initial condition** to be sure that the two are consistent.
+	* In this noise-free environment, the filter's state transition equation should track the true simulated physics with absolute precision.
+	* If the filter's prediction diverges from the simulation event slightly when noise is zero, it proves there is a coding or formulation bug.
+* **{Open-Loop Test}** Run without update step, so that errors in the model **aren't hidden** (sometime correction step hides errors in the model).
+	* We allow process noise and system dynamics to run with completely disabled measurement correction/update step (ignore incoming sensor data)
+	* This test checks that kinematic model doesn't have a hidden bias (e.g. assumes an object accelerates 1% too fast every second), the filter will accumulate an internal drift. High-rate sensor updates constantly force the error back to zero, masking the underlying model drift.
+	* Any model bias or improper process noise covariance will immediately cause the filter's error covariance or state estimates to blow up or drift away from the true simulation.
+
+
+Filter covariance prediction model check:
+* The covariance must always represent the approximate level of uncertainty in the filter estimates (model and tuning need to be correct)
+	* True State is within the uncertainty bounds around the estimated state
+	* If this is not the case then the filter is **inconsistent**. This leads to bad and incorrect estimates.
+	* A filter is statistically consistent wen the true error vector $\tilde x = x_k - \hat x_k$ matches the theoretical variance predicted by the covariance matrix $P_k$
+	* According to $3\sigma$ rule for a Gaussian distribution, the true state errors should fall within the $\pm 3\sqrt P_{ii}$ bounds of estimates state on any given axis
+		* If $P$ is too small (underestimated uncertainty), the filter thinks it has pinpoint accuracy and ignore measurement which leads to divergence and filter failure
+		* If $P$ is too large (overestimated uncertainty), the filter is sluggish and fails to react quickly to real changes. 
+* Check prediction model correctly transforms uncertainty
+	* Uncertainty in the system should not be increasing (if $Q=0$) but it can be transformed with model: $P_k^- = F_{k-1}P_{k-1}^+F_{k-1}^T + Q_{k-1}$, where $Q_{k-1}$ inflates/increases uncertainty and $F_{k-1}P_{k-1}^+F_{k-1}^T$ transforms uncertainty from $k-1$ to $k$
+* Check position uncertainty operating as expected
+	* Set initial position uncertainty to non-zero value
+	* Set initial velocity uncertainty to zero value
+	* Run the filter and see that the position uncertainty stays the same
+* Check velocity uncertainty operating as expected
+	* Set initial position uncertainty to zero value
+	* Set initial velocity uncertainty to non-zero value
+	* Run the filter and see that the velocity uncertainty stays the same, but the position uncertainty grows linearly with time
+		* 1m/s (1 sigma) velocity uncertainty will grow into a 120m (1 sigma) uncertainty after 120 seconds
+* Check process model noise (acceleration uncertainty) operating as expected
+	* Set initial position uncertainty to zero value
+	* Set initial velocity uncertainty to zero value
+	* Set non-zero acceleration std (so $Q$ process model noise is non-zero)
+	* Run the filter and see that the total level of uncertainty is the system grows with time (velocity uncertainty increase linearly, position uncertainty increase quadratic)
+
+
+	
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

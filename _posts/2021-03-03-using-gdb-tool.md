@@ -255,3 +255,28 @@ or
 $ gdb
 (gdb) <CTRL+X and A>
 ```
+
+# Config
+
+Macros:
+* `send-sigterm` : Sends SIGTERM (signal 15) to the target process to trigger
+
+
+File `$HOME/.gdbinit`:
+
+```text
+handle SIGTERM pass nostop print
+
+define send-sigterm
+    print "Sending SIGTERM to the target process..."
+    call (int)raise(15)
+end
+document send-sigterm
+    Sends SIGTERM (signal 15) to the target process to trigger application shutdown handlers.
+end
+
+define hook-quit
+    signal SIGTERM
+end
+```
+

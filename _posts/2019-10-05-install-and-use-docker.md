@@ -101,6 +101,9 @@ $ sudo systemctl restart docker
 
 Install QEMU and register the executable types on the host:
 ```shell
+$ sudo apt update && sudo apt install -y qemu-user-static binfmt-support
+$ ls /proc/sys/fs/binfmt_misc/qemu-*
+...you should see a list of QEMU binary formats...
 $ docker run --privileged --rm tonistiigi/binfmt --install all
 $ ls /proc/sys/fs/binfmt_misc
 python3.13    qemu-arm          qemu-mips64    qemu-ppc64le  qemu-s390x  status
